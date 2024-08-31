@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulario de Ingreso y Salida</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #1e1e1e;
+            color: #e0e0e0;
+            padding: 20px;
+            margin: 0;
+        }
+        h2, h3 {
+            color: #FFC000; /* Color para el nombre del formulario */
+        }
+        form, table, button, select {
+            margin-bottom: 20px;
+        }
+        input[type="text"], input[type="password"], input[type="time"], button, select {
+            font-size: 16px;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            background: #FFC000; /* Color de fondo de los botones */
+            color: #000; /* Color del texto de los botones */
+        }
+        button {
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #e0a300; /* Color de fondo al pasar el ratón */
+        }
+        .btn-red {
+            background-color: #ff4d4d; /* Color rojo para el botón de eliminar */
+            color: #fff; /* Color del texto del botón de eliminar */
+        }
+        .btn-red:hover {
+            background-color: #e03e3e; /* Color de fondo al pasar el ratón */
+        }
+        .btn-icon {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 24px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #333;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border: 1px solid #444;
+        }
+        th {
+            background-color: #444;
+        }
+        tr:nth-child(even) {
+            background-color: #2c2c2c;
+        }
+        tr:hover {
+            background-color: #555;
+        }
+        #updateForm, #deleteForm, #loginForm, #searchForm, #salidaForm, #ingresoForm {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #444;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+        #updateForm h3, #deleteForm h3, #loginForm h3, #searchForm h3, #salidaForm h3, #ingresoForm h3 {
+            color: #FFC000; /* Color para el título del formulario emergente */
+        }
+        #updateForm input, #deleteForm input, #loginForm input, #searchForm input, #salidaForm input, #ingresoForm input {
+            margin-bottom: 10px;
+        }
+        #overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+        #loginButton, #logoutButton {
+            background-color: #FFC000;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+        #loginButton:hover, #logoutButton:hover {
+            background-color: #e0a300;
+        }
+        .nota-roja {
+            color: red;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h2>Registro de Ingreso y Salida</h2>
+
+    <!-- Botón de Login y Logout -->
+    <button id="loginButton" onclick="mostrarFormularioLogin()">Iniciar Sesión</button>
+    <button id="logoutButton" onclick="cerrarSesion()" style="display: none;">Cerrar Sesión</button>
+
+    <!-- Formulario de Login -->
+    <div id="loginForm">
+        <h3>Login</h3>
+        <label for="username">Nombre de Usuario:</label>
+        <input type="text" id="username"><br>
+        <label for="password">Contraseña:</label>
+        <input type="password" id="password"><br>
+        <button onclick="iniciarSesion()">Iniciar Sesión</button>
+        <button onclick="cerrarFormularioLogin()">Cancelar</button>
+    </div>
+
+    <!-- Formulario Principal -->
+    <div id="contenidoFormulario" style="display: none;">
+        <form id="registroForm">
+            <button type="button" onclick="mostrarFormularioBuscar()">Buscar</button>
+            <button type="button" onclick="mostrarFormularioIngreso()">Marcar Ingreso</button>
+            <button type="button" onclick="mostrarFormularioSalida()">Marcar Salida</button>
+            <button type="button" onclick="mostrarFormularioEliminar()" class="btn-red" id="btnEliminar">Eliminar</button>
+            <button type="button" onclick="mostrarFormularioActualizar()" id="btnActualizar">Actualizar</button>
+            <button type="button" onclick="limpiarDatos()" class="btn-red btn-icon" id="btnLimpiar">
+                ♻️
+            </button>
+        </form>
+
+        <br><br>
+        <label for="filtroMeses">Filtrar por Mes:</label>
+        <select id="filtroMeses" onchange="filtrarRegistros()">
+            <option value="">--Seleccione un mes--</option>
+            <option value="01">Enero</option>
+            <option value="02">Febrero</option>
+            <option value="03">Marzo</option>
+            <option value="04">Abril</option>
+            <option value="05">Mayo</option>
+            <option value="06">Junio</option>
+            <option value="07">Julio</option>
+            <option value="08">Agosto</option>
+            <option value="09">Septiembre</option>
+            <option value="10">Octubre</option>
+            <option value="11">Noviembre</option>
+            <option value="12">Diciembre</option>
+        </select>
+
+        <label for="filtroDias">Filtrar por Día de la Semana:</label>
+        <select id="filtroDias" onchange="filtrarRegistros()">
+            <option value="">--Seleccione un día--</option>
+            <option value="0">Domingo</option>
+            <option value="1">Lunes</option>
+            <option value="2">Martes</option>
+            <option value="3">Miércoles</option>
+            <option value="4">Jueves</option>
+            <option value="5">Viernes</option>
+            <option value="6">Sábado</option>
+        </select>
+
+        <br><br>
+        <h3>Usuarios Ingresados</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Fecha</th>
+                    <th>Hora de Ingreso</th>
+                    <th>Hora de Salida</th>
+                    <th>Nota</th>
+                </tr>
+            </thead>
+            <tbody id="tablaRegistros">
+            </tbody>
+        </table>
+
+        <br><br>
+        <button onclick="descargarCSV()" id="btnDescargar">Descargar CSV</button>
+    </div>
+
+    <!-- Formulario de Actualización -->
+    <div id="overlay"></div>
+    <div id="updateForm">
+        <h3>Actualizar Datos del Usuario</h3>
+        <label for="nombreActualizar">Nombre Actual:</label>
+        <input type="text" id="nombreActualizar" disabled><br>
+        <label for="nuevoNombre">Nuevo Nombre:</label>
+        <input type="text" id="nuevoNombre" required><br>
+        <button onclick="actualizarUsuario()">Actualizar Usuario</button>
+        <button onclick="cerrarFormularioActualizar()">Cancelar</button>
+    </div>
+
+    <!-- Formulario de Eliminación -->
+    <div id="deleteForm">
+        <h3>Eliminar Usuario</h3>
+        <label for="nombreEliminar">Nombre:</label>
+        <input type="text" id="nombreEliminar"><br>
+        <button onclick="eliminarUsuario()">Eliminar Usuario</button>
+        <button onclick="cerrarFormularioEliminar()">Cancelar</button>
+    </div>
+
+    <!-- Formulario de Búsqueda -->
+    <div id="searchForm">
+        <h3>Buscar Usuario</h3>
+        <label for="nombreBuscar">Nombre:</label>
+        <input type="text" id="nombreBuscar"><br>
+        <button onclick="buscarUsuario()">Buscar</button>
+        <button onclick="cerrarFormularioBuscar()">Cancelar</button>
+    </div>
+
+    <!-- Formulario de Salida -->
+    <div id="salidaForm">
+        <h3>Marcar Salida</h3>
+        <label for="nombreSalida">Nombre:</label>
+        <input type="text" id="nombreSalida"><br>
+        <button onclick="marcarSalida()">Marcar Salida</button>
+        <button onclick="cerrarFormularioSalida()">Cancelar</button>
+    </div>
+
+    <!-- Formulario de Ingreso -->
+    <div id="ingresoForm">
+        <h3>Marcar Ingreso</h3>
+        <label for="nombreIngreso">Nombre:</label>
+        <input type="text" id="nombreIngreso"><br>
+        <button onclick="marcarIngreso()">Marcar Ingreso</button>
+        <button onclick="cerrarFormularioIngreso()">Cancelar</button>
+    </div>
+
+    <script>
+        let registros = [];
+        let rolUsuario = '';
+        let tiempoRestante = 120; // Tiempo en segundos (2 minutos)
+        let temporizador;
+
+        // Cargar registros desde localStorage al cargar la página
+        window.onload = function() {
+            const registrosGuardados = localStorage.getItem('registros');
+            if (registrosGuardados) {
+                registros = JSON.parse(registrosGuardados);
+                actualizarTabla();
+            }
+            iniciarTemporizador();
+        }
+
+        function iniciarTemporizador() {
+            if (temporizador) {
+                clearInterval(temporizador);
+            }
+            tiempoRestante = 120; // Reiniciar temporizador a 2 minutos
+            temporizador = setInterval(function() {
+                tiempoRestante--;
+                if (tiempoRestante <= 0) {
+                    clearInterval(temporizador);
+                    cerrarSesion();
+                }
+            }, 1000);
+        }
+
+        function mostrarFormularioLogin() {
+            document.getElementById('loginForm').style.display = 'block';
+        }
+
+        function cerrarFormularioLogin() {
+            document.getElementById('loginForm').style.display = 'none';
+        }
+
+        function iniciarSesion() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            if (username === 'Docente' && password === 'UPN2024') {
+                rolUsuario = 'cliente';
+            } else if (username === 'Administrador' && password === 'AdminUPN2024') {
+                rolUsuario = 'administrador';
+            } else {
+                alert('Credenciales incorrectas.');
+                return;
+            }
+
+            cerrarFormularioLogin();
+            mostrarFormularioPrincipal();
+            iniciarTemporizador();
+        }
+
+        function cerrarSesion() {
+            rolUsuario = '';
+            document.getElementById('contenidoFormulario').style.display = 'none';
+            document.getElementById('loginButton').style.display = 'block';
+            document.getElementById('logoutButton').style.display = 'none';
+        }
+
+        function mostrarFormularioPrincipal() {
+            document.getElementById('contenidoFormulario').style.display = 'block';
+            document.getElementById('loginButton').style.display = 'none';
+            document.getElementById('logoutButton').style.display = 'block';
+
+            if (rolUsuario === 'cliente') {
+                document.getElementById('btnEliminar').style.display = 'none';
+                document.getElementById('btnActualizar').style.display = 'none';
+                document.getElementById('btnDescargar').style.display = 'none';
+                document.getElementById('btnLimpiar').style.display = 'none';
+            } else if (rolUsuario === 'administrador') {
+                document.getElementById('btnEliminar').style.display = 'inline';
+                document.getElementById('btnActualizar').style.display = 'inline';
+                document.getElementById('btnDescargar').style.display = 'inline';
+                document.getElementById('btnLimpiar').style.display = 'inline';
+            }
+        }
+
+        function mostrarFormularioBuscar() {
+            document.getElementById('overlay').style.display = 'block';
+            document.getElementById('searchForm').style.display = 'block';
+        }
+
+        function cerrarFormularioBuscar() {
+            document.getElementById('overlay').style.display = 'none';
+            document.getElementById('searchForm').style.display = 'none';
+        }
+
+        function buscarUsuario() {
+            const nombre = document.getElementById('nombreBuscar').value;
+            const registro = registros.find(r => r.nombre === nombre);
+
+            if (registro) {
+                alert(`Usuario encontrado: ${nombre}\nFecha: ${registro.fecha}\nHora de Ingreso: ${registro.horaIngreso}\nHora de Salida: ${registro.horaSalida || "No registrada"}`);
+            } else {
+                alert("Usuario no encontrado");
+            }
+        }
+
+        function mostrarFormularioSalida() {
+            document.getElementById('overlay').style.display = 'block';
+            document.getElementById('salidaForm').style.display = 'block';
+        }
+
+        function cerrarFormularioSalida() {
+            document.getElementById('overlay').style.display = 'none';
+            document.getElementById('salidaForm').style.display = 'none';
+        }
+
+        function mostrarFormularioIngreso() {
+            document.getElementById('overlay').style.display = 'block';
+            document.getElementById('ingresoForm').style.display = 'block';
+        }
+
+        function cerrarFormularioIngreso() {
+            document.getElementById('overlay').style.display = 'none';
+            document.getElementById('ingresoForm').style.display = 'none';
+        }
+
+        function marcarIngreso() {
+            const nombre = document.getElementById('nombreIngreso').value;
+            const fecha = new Date().toLocaleDateString();
+            const horaIngreso = new Date().toLocaleTimeString();
+
+            const registroExistente = registros.find(r => r.nombre === nombre && r.fecha === fecha);
+
+            if (registroExistente) {
+                alert("El usuario ya tiene registrado un ingreso para hoy.");
+            } else {
+                const registro = { nombre, fecha, horaIngreso, horaSalida: "" };
+                registros.push(registro);
+                actualizarLocalStorage();
+                actualizarTabla();
+                document.getElementById('nombreIngreso').value = ''; // Limpiar caja de texto
+                alert("Ingreso marcado.");
+            }
+        }
+
+        function marcarSalida() {
+            const nombre = document.getElementById('nombreSalida').value;
+            const fechaActual = new Date().toLocaleDateString();
+            const horaSalida = new Date().toLocaleTimeString();
+
+            const registro = registros.find(r => r.nombre === nombre && r.fecha === fechaActual);
+
+            if (registro && !registro.horaSalida) {
+                registro.horaSalida = horaSalida;
+                actualizarLocalStorage();
+                actualizarTabla();
+                document.getElementById('nombreSalida').value = ''; // Limpiar caja de texto
+                alert("Salida marcada.");
+            } else if (registro && registro.horaSalida) {
+                alert("El usuario ya ha registrado su salida.");
+            } else {
+                alert("Usuario no encontrado o la salida no se puede registrar para una fecha anterior.");
+            }
+        }
+
+        function mostrarFormularioEliminar() {
+            document.getElementById('overlay').style.display = 'block';
+            document.getElementById('deleteForm').style.display = 'block';
+        }
+
+        function eliminarUsuario() {
+            const nombre = document.getElementById('nombreEliminar').value;
+            const fecha = new Date().toLocaleDateString();
+            const index = registros.findIndex(r => r.nombre === nombre && r.fecha === fecha);
+
+            if (index !== -1) {
+                registros.splice(index, 1);
+                actualizarLocalStorage();
+                actualizarTabla();
+                document.getElementById('nombreEliminar').value = ''; // Limpiar caja de texto
+                cerrarFormularioEliminar();
+                alert("Usuario eliminado.");
+            } else {
+                alert("Usuario no encontrado.");
+            }
+        }
+
+        function mostrarFormularioActualizar() {
+            const nombre = document.getElementById('nombre').value;
+            const registro = registros.find(r => r.nombre === nombre);
+
+            if (registro) {
+                document.getElementById('nombreActualizar').value = registro.nombre;
+                document.getElementById('overlay').style.display = 'block';
+                document.getElementById('updateForm').style.display = 'block';
+            } else {
+                alert("Usuario no encontrado.");
+            }
+        }
+
+        function actualizarUsuario() {
+            const nombreActual = document.getElementById('nombreActualizar').value;
+            const nuevoNombre = document.getElementById('nuevoNombre').value;
+
+            const registro = registros.find(r => r.nombre === nombreActual);
+
+            if (registro) {
+                registro.nombre = nuevoNombre;
+                actualizarLocalStorage();
+                actualizarTabla();
+                document.getElementById('nombre').value = ''; // Limpiar caja de texto
+                cerrarFormularioActualizar();
+                alert("Datos actualizados.");
+            } else {
+                alert("Usuario no encontrado.");
+            }
+        }
+
+        function cerrarFormularioActualizar() {
+            document.getElementById('overlay').style.display = 'none';
+            document.getElementById('updateForm').style.display = 'none';
+        }
+
+        function cerrarFormularioEliminar() {
+            document.getElementById('overlay').style.display = 'none';
+            document.getElementById('deleteForm').style.display = 'none';
+        }
+
+        function actualizarTabla() {
+            const tablaRegistros = document.getElementById('tablaRegistros');
+            tablaRegistros.innerHTML = '';
+
+            registros.forEach(function(registro) {
+                const fila = document.createElement('tr');
+                const nota = !registro.horaSalida && new Date().toLocaleDateString() > registro.fecha ? '<td class="nota-roja">Salida no registrada</td>' : '<td></td>';
+                fila.innerHTML = `<td>${registro.nombre}</td><td>${registro.fecha}</td><td>${registro.horaIngreso}</td><td>${registro.horaSalida || ""}</td>${nota}`;
+                tablaRegistros.appendChild(fila);
+            });
+        }
+
+        function descargarCSV() {
+            let csvContent = "data:text/csv;charset=utf-8,Nombre,Fecha,Hora de Ingreso,Hora de Salida\n";
+            registros.forEach(function(registro) {
+                const fila = `${registro.nombre},${registro.fecha},${registro.horaIngreso},${registro.horaSalida}`;
+                csvContent += fila + "\n";
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement('a');
+            link.setAttribute('href', encodedUri);
+            link.setAttribute('download', 'registros.csv');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function limpiarDatos() {
+            if (confirm("¿Está seguro de que desea eliminar todos los datos registrados?")) {
+                registros = [];
+                actualizarLocalStorage();
+                actualizarTabla();
+                alert("Todos los datos han sido eliminados.");
+            }
+        }
+
+        function actualizarLocalStorage() {
+            localStorage.setItem('registros', JSON.stringify(registros));
+        }
+
+        function filtrarRegistros() {
+            const mesSeleccionado = document.getElementById('filtroMeses').value;
+            const diaSeleccionado = document.getElementById('filtroDias').value;
+            const tablaRegistros = document.getElementById('tablaRegistros');
+            tablaRegistros.innerHTML = '';
+
+            registros.forEach(function(registro) {
+                const fecha = new Date(registro.fecha);
+                const mes = fecha.getMonth() + 1;
+                const dia = fecha.getDay();
+
+                if ((mesSeleccionado === "" || mesSeleccionado == mes) &&
+                    (diaSeleccionado === "" || diaSeleccionado == dia)) {
+                    const fila = document.createElement('tr');
+                    const nota = !registro.horaSalida && new Date().toLocaleDateString() > registro.fecha ? '<td class="nota-roja">Salida no registrada</td>' : '<td></td>';
+                    fila.innerHTML = `<td>${registro.nombre}</td><td>${registro.fecha}</td><td>${registro.horaIngreso}</td><td>${registro.horaSalida || ""}</td>${nota}`;
+                    tablaRegistros.appendChild(fila);
+                }
+            });
+        }
+    </script>
+</body>
+</html>
